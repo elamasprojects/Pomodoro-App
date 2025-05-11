@@ -1,0 +1,468 @@
+/* Form Styles */
+.add-project-form,
+.checkpoint-form,
+.task-form {
+  margin: 10px 0;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.add-project-form input,
+.checkpoint-form input,
+.task-form input {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 1rem;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.add-project-form button,
+.checkpoint-form button,
+.task-form button {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  background: #4a90e2;
+  color: white;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.add-project-form button:hover,
+.checkpoint-form button:hover,
+.task-form button:hover {
+  background: #357abd;
+}
+
+/* Project and Checkpoint Styles */
+.project {
+  margin: 20px 0;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+}
+
+.project-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.project-title-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.progress-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 200px;
+}
+
+.progress-bar {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+  flex: 1;
+  position: relative;
+}
+
+.progress-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: #4a90e2;
+  transition: width 0.3s ease;
+  width: var(--progress-width, 0%);
+}
+
+.progress-text {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.7);
+  min-width: 45px;
+  text-align: right;
+}
+
+.header-controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.delete-btn {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  font-weight: 400;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+.delete-btn:hover {
+  background-color: rgba(255, 0, 0, 0.2);
+}
+
+.checkpoint {
+  margin: 10px 0;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 6px;
+}
+
+.checkpoint-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.tasks-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.task-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  min-height: 32px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+.task-item span {
+  flex: 1;
+  transition: all 0.2s ease;
+  order: 1;
+}
+
+.task-item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+  background: rgba(255, 255, 255, 0.05);
+  flex-shrink: 0;
+  order: 2;
+}
+
+.task-item input[type="checkbox"]:checked {
+  background: #4a90e2;
+  border-color: #4a90e2;
+}
+
+.task-item input[type="checkbox"]:checked::after {
+  content: '✓';
+  position: absolute;
+  color: white;
+  font-size: 12px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.task-item input[type="checkbox"]:hover {
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.task-item input[type="checkbox"]:checked + span {
+  text-decoration: line-through;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* General Layout */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: white;
+  padding: 20px;
+  margin: 0;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#projects-container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* Typography */
+.project-header span {
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.checkpoint-header span {
+  font-size: 1.1rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.task-item span {
+  font-size: 1rem;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+/* Timer Display */
+#timer {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 3.5rem;
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  display: inline-block;
+  min-width: 200px;
+  text-align: center;
+  transition: font-size 0.3s ease;
+}
+
+#timer[contenteditable="true"] {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 0 10px;
+  outline: none;
+  cursor: text;
+}
+
+.edit-timer-btn {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 5px;
+  margin-left: 10px;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+  vertical-align: middle;
+}
+
+.edit-timer-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Mode Buttons */
+.mode-button {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 500;
+}
+
+/* Focus Mode */
+.focus-mode #projects-container,
+.focus-mode .mode-button {
+  display: none;
+}
+
+.focus-mode #timer-container {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  width: 100%;
+}
+
+.focus-mode #timer {
+  font-size: 8rem;
+  margin-bottom: 2rem;
+}
+
+.focus-mode #controls-container {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.focus-mode #start,
+.focus-mode #reset {
+  font-size: 1.5rem;
+  padding: 1rem 3rem;
+  border-radius: 12px;
+}
+
+.focus-mode .edit-timer-btn {
+  font-size: 2rem;
+  margin-left: 1rem;
+}
+
+/* Controls */
+#controls-container {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin: 1rem 0;
+  transition: all 0.3s ease;
+}
+
+#start,
+#reset {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  background: #4a90e2;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+#start:hover,
+#reset:hover {
+  background: #357abd;
+  transform: translateY(-1px);
+}
+
+#fullscreen {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 1.25rem;
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+#fullscreen:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Add Buttons */
+.btn-add {
+  background: none;
+  border: none;
+  color: #4a90e2;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.btn-add:hover {
+  background-color: rgba(74, 144, 226, 0.1);
+}
+
+.edit-task-input {
+  font-family: inherit;
+  font-size: 1rem;
+  padding: 6px 10px;
+  border: 1.5px solid #4a90e2;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.08);
+  color: white;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.edit-task-input:focus {
+  border-color: #357abd;
+  background: rgba(74,144,226,0.08);
+}
+
+.segmented-control {
+  width: 340px;
+  margin: 0 auto 32px auto;
+  padding: 6px;
+  background: #18191c;
+  border-radius: 999px;
+  box-shadow: 0 2px 8px 0 rgba(0,0,0,0.10);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+.segments {
+  display: flex;
+  position: relative;
+  width: 100%;
+}
+
+.segment-btn {
+  position: relative;
+  z-index: 2;
+  flex: 1 1 0;
+  border: none;
+  background: none;
+  color: #fff;
+  font-family: inherit;
+  font-size: 1.05rem;
+  font-weight: 500;
+  padding: 10px 0;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color 0.2s;
+  outline: none;
+}
+
+.segment-btn.active {
+  color: #18191c;
+  font-weight: 600;
+}
+
+.segments .highlight {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: #fff;
+  border-radius: 999px;
+  z-index: 1;
+  transition: transform 0.3s cubic-bezier(.4,1,.4,1), width 0.3s cubic-bezier(.4,1,.4,1);
+  box-shadow: 0 2px 8px 0 rgba(0,0,0,0.10);
+}
+
+@media (max-width: 400px) {
+  .segmented-control {
+    width: 98vw;
+    min-width: 0;
+    padding: 2px;
+  }
+  .segment-btn {
+    font-size: 0.95rem;
+    padding: 8px 0;
+  }
+} 

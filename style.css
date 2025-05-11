@@ -1,0 +1,217 @@
+/* Reset básico */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+html, body {
+  height: 100%;
+}
+
+/* Layout principal */
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #000;
+  color: #fff;
+  font-family: Arial, sans-serif;
+  padding: 20px;
+  overflow-x: hidden;
+}
+h1 {
+  margin-bottom: 20px;
+  font-size: 28px;
+  text-align: center;
+}
+
+/* Input de disciplina */
+#discipline {
+  padding: 8px;
+  width: 100%;
+  max-width: 300px;
+  border: none;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  background: #111;
+  color: #fff;
+}
+
+/* Selector de modo */
+#mode-selector {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 0 auto 30px;
+  width: 100%;
+  max-width: 500px;
+}
+.mode-button {
+  background: #222;
+  border: none;
+  color: #fff;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.3s;
+  font-size: 14px;
+}
+.mode-button.active {
+  background: #7f00ff;
+}
+.mode-button:hover {
+  background: #333;
+}
+
+/* Contenedor de cronómetro */
+#timer-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 500px;
+  margin-bottom: 40px;
+}
+#timer {
+  font-size: 150px; /* Aumentado */
+  background: none; /* Sin fondo */
+  padding: 0;       /* Sin padding */
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* Barra de progreso lineal */
+#progress-bar {
+  width: 100%;
+  max-width: 500px;
+  height: 10px;
+  background: #333;
+  border-radius: 5px;
+  overflow: hidden;
+  margin-top: 10px;
+}
+#progress-bar-fill {
+  width: 0;
+  height: 100%;
+  background: #7f00ff;
+  transition: width 0.3s ease;
+}
+
+/* Controles (start, pause, reset) */
+#controls {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 40px;
+}
+#controls button {
+  background: #7f00ff;
+  border: none;
+  color: #fff;
+  padding: 12px 25px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: opacity 0.2s;
+}
+#controls button:hover {
+  opacity: 0.9;
+}
+#controls .icon-btn {
+  background: none;
+  font-size: 28px;
+}
+
+/* Sección de tareas */
+#tasks-container {
+  width: 100%;
+  max-width: 500px;
+  background: #111;
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 40px;
+}
+.tasks-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.tasks-title {
+  font-weight: bold;
+  font-size: 18px;
+}
+.menu-btn {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+}
+.tasks-list {
+  list-style: none;
+  margin-bottom: 10px;
+}
+.task-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #222;
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 8px;
+}
+.task-item input[type="checkbox"] {
+  accent-color: #7f00ff;
+  transform: scale(1.2);
+  cursor: pointer;
+  margin-right: 10px;
+}
+.add-task-container {
+  border: 2px dashed #333;
+  border-radius: 5px;
+  text-align: center;
+  padding: 15px;
+}
+.add-task-btn {
+  background: none;
+  border: none;
+  color: #7f00ff;
+  font-size: 16px;
+  cursor: pointer;
+  transition: text-decoration 0.2s;
+}
+.add-task-btn:hover {
+  text-decoration: underline;
+}
+
+/* Botón guardar sesión */
+#save-session {
+  background: #444;
+  border: none;
+  color: #fff;
+  padding: 12px 25px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-bottom: 40px;
+}
+
+/* Historial y estadísticas */
+#stats-chart,
+#session-history {
+  width: 100%;
+  max-width: 500px;
+  margin-bottom: 40px;
+}
+.history-item {
+  background: #222;
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 8px;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  #timer { font-size: 100px; }
+  .mode-button, #controls button { padding: 8px 12px; font-size: 14px; }
+}
