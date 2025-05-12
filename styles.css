@@ -273,6 +273,35 @@ body {
 }
 
 /* Typography */
+h1, .main-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  letter-spacing: -1px;
+  margin-bottom: 1.2rem;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+h2, .settings-header h2, .section-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+h3, .project-title, .checkpoint-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 0.7rem;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+.subtitle, .tasks-title, .checkpoint-header, .project-header {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #bbaaff;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
 .project-header span {
   font-size: 1.4rem;
   font-weight: 600;

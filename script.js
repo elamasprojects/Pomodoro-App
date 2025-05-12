@@ -775,7 +775,198 @@ const overlay = document.createElement('div');
 overlay.className = 'settings-overlay';
 document.body.appendChild(overlay);
 
+function showFocusTimerSettings() {
+  const content = settingsMenu.querySelector('.settings-content');
+  content.innerHTML = '';
+
+  // Title
+  const title = document.createElement('h2');
+  title.textContent = 'Focus Timer';
+  content.appendChild(title);
+
+  // Timer Mode Multi-select
+  const modeLabel = document.createElement('label');
+  modeLabel.textContent = 'Select timer mode';
+  modeLabel.style.display = 'block';
+  modeLabel.style.margin = '18px 0 6px 0';
+  content.appendChild(modeLabel);
+
+  const modeSelect = document.createElement('select');
+  modeSelect.style.fontSize = '1.1rem';
+  modeSelect.style.padding = '8px 12px';
+  modeSelect.style.borderRadius = '8px';
+  modeSelect.style.background = '#111';
+  modeSelect.style.color = '#fff';
+  modeSelect.style.border = '1px solid #444';
+  modeSelect.style.marginBottom = '18px';
+  modeSelect.style.width = '180px';
+
+  const timerModes = [
+    { value: 'pomodoro', label: 'Pomodoro' },
+    { value: 'stopwatch', label: 'Stopwatch' },
+    { value: '52-17', label: '52/17' }
+  ];
+  timerModes.forEach(opt => {
+    const option = document.createElement('option');
+    option.value = opt.value;
+    option.textContent = opt.label;
+    modeSelect.appendChild(option);
+  });
+  // Load from localStorage or default
+  const savedMode = localStorage.getItem('timerMode') || 'pomodoro';
+  modeSelect.value = savedMode;
+  content.appendChild(modeSelect);
+
+  // Timer Lengths Section
+  const lengthsTitle = document.createElement('h3');
+  lengthsTitle.textContent = 'Timer Lengths';
+  content.appendChild(lengthsTitle);
+
+  const note = document.createElement('div');
+  note.textContent = 'Note: use Focus and Long Break for Animedoro.';
+  note.style.fontSize = '0.95rem';
+  note.style.color = '#aaa';
+  note.style.marginBottom = '12px';
+  content.appendChild(note);
+
+  // Timer input fields
+  const timerFields = [
+    { id: 'focus', label: 'Focus', min: 1, max: 120 },
+    { id: 'shortBreak', label: 'Short Break', min: 1, max: 60 },
+    { id: 'longBreak', label: 'Long Break', min: 1, max: 60 },
+    { id: 'countdown', label: 'Countdown', min: 1, max: 180 }
+  ];
+  const configData = JSON.parse(localStorage.getItem('pomodoroConfig')) || { pomodoro: 25, shortBreak: 5, longBreak: 15, countdown: 20 };
+  const fieldRow = document.createElement('div');
+  fieldRow.style.display = 'flex';
+  fieldRow.style.gap = '24px';
+  fieldRow.style.marginBottom = '18px';
+
+  const fieldInputs = {};
+  timerFields.forEach(f => {
+    const col = document.createElement('div');
+    col.style.display = 'flex';
+    col.style.flexDirection = 'column';
+    col.style.alignItems = 'center';
+    col.style.minWidth = '90px';
+    const label = document.createElement('label');
+    label.textContent = f.label;
+    label.style.fontWeight = '600';
+    label.style.marginBottom = '6px';
+    col.appendChild(label);
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.min = f.min;
+    input.max = f.max;
+    input.value = configData[f.id === 'focus' ? 'pomodoro' : f.id] || '';
+    input.style.width = '60px';
+    input.style.fontSize = '1.2rem';
+    input.style.textAlign = 'center';
+    input.style.borderRadius = '8px';
+    input.style.border = '1px solid #444';
+    input.style.background = '#111';
+    input.style.color = '#fff';
+    input.style.padding = '6px 0';
+    fieldInputs[f.id] = input;
+    col.appendChild(input);
+    const mins = document.createElement('span');
+    mins.textContent = 'mins';
+    mins.style.fontSize = '0.95rem';
+    mins.style.color = '#aaa';
+    col.appendChild(mins);
+    fieldRow.appendChild(col);
+  });
+  content.appendChild(fieldRow);
+
+  // 52/17 logic
+  function update52_17Fields() {
+    if (modeSelect.value === '52-17') {
+      fieldInputs.focus.value = 52;
+      fieldInputs.shortBreak.value = 17;
+      fieldInputs.focus.disabled = true;
+      fieldInputs.shortBreak.disabled = true;
+    } else {
+      fieldInputs.focus.disabled = false;
+      fieldInputs.shortBreak.disabled = false;
+    }
+  }
+  modeSelect.addEventListener('change', () => {
+    update52_17Fields();
+  });
+  update52_17Fields();
+
+  // Save button
+  const saveBtn = document.createElement('button');
+  saveBtn.textContent = 'Save';
+  saveBtn.style.marginTop = '18px';
+  saveBtn.style.padding = '10px 28px';
+  saveBtn.style.fontSize = '1.1rem';
+  saveBtn.style.background = '#6e00ff';
+  saveBtn.style.color = '#fff';
+  saveBtn.style.border = 'none';
+  saveBtn.style.borderRadius = '8px';
+  saveBtn.style.cursor = 'pointer';
+  saveBtn.style.fontWeight = '600';
+  saveBtn.style.letterSpacing = '0.5px';
+  saveBtn.style.transition = 'background 0.2s';
+  saveBtn.onmouseover = () => saveBtn.style.background = '#4a00b4';
+  saveBtn.onmouseout = () => saveBtn.style.background = '#6e00ff';
+  content.appendChild(saveBtn);
+
+  saveBtn.onclick = () => {
+    // Save config
+    const newConfig = {
+      pomodoro: parseInt(fieldInputs.focus.value),
+      shortBreak: parseInt(fieldInputs.shortBreak.value),
+      longBreak: parseInt(fieldInputs.longBreak.value),
+      countdown: parseInt(fieldInputs.countdown.value)
+    };
+    localStorage.setItem('pomodoroConfig', JSON.stringify(newConfig));
+    localStorage.setItem('timerMode', modeSelect.value);
+    window.location.reload();
+  };
+}
+
+// Update settings menu to show focus timer settings on click
+function populateSettingsMenu() {
+  const content = settingsMenu.querySelector('.settings-content');
+  content.innerHTML = '';
+  // Add menu options
+  const options = [
+    { icon: '⏰', label: 'Clock' },
+    { icon: '⏱️', label: 'Focus Timer', onClick: showFocusTimerSettings },
+    { icon: '📊', label: 'Stats' },
+    { icon: '👤', label: 'Profile' },
+    { icon: '💬', label: 'Feedback' }
+  ];
+  options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'settings-menu-item';
+    btn.innerHTML = `<span style="font-size:1.3em; margin-right:10px;">${opt.icon}</span> <span>${opt.label}</span>`;
+    btn.style.display = 'flex';
+    btn.style.alignItems = 'center';
+    btn.style.gap = '10px';
+    btn.style.width = '100%';
+    btn.style.background = 'none';
+    btn.style.border = 'none';
+    btn.style.color = '#fff';
+    btn.style.fontSize = '1.1rem';
+    btn.style.padding = '14px 18px';
+    btn.style.borderRadius = '8px';
+    btn.style.cursor = 'pointer';
+    btn.style.transition = 'background 0.2s';
+    btn.onmouseover = () => btn.style.background = 'rgba(110,0,255,0.15)';
+    btn.onmouseout = () => btn.style.background = 'none';
+    if (opt.onClick) btn.onclick = opt.onClick;
+    content.appendChild(btn);
+  });
+}
+
+// Call populateSettingsMenu when opening settings
 function toggleSettings() {
+  if (!settingsMenu.classList.contains('active')) {
+    populateSettingsMenu();
+  }
   settingsMenu.classList.toggle('active');
   overlay.classList.toggle('active');
   document.body.style.overflow = settingsMenu.classList.contains('active') ? 'hidden' : '';
