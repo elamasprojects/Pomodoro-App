@@ -12,6 +12,12 @@ let currentMode = 'pomodoro';
 let timeLeft = modes[currentMode];
 let isRunning = false;
 let timer;
+let completedPomodoros = parseInt(localStorage.getItem('completedPomodoros')) || 0;
+let activeProjectId = localStorage.getItem('activeProjectId') || null;
+let sessionStartTime = null;
+
+// Create audio element for applause
+const applauseSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3');
 
 // ===== DOM ELEMENTS =====
 const timerDisplay = document.getElementById('timer');
@@ -37,6 +43,7 @@ timerDisplay.parentNode.insertBefore(editButton, timerDisplay.nextSibling);
 applyBackground();
 updateDisplay();
 renderProjects();
+updatePomodoroCircles(); // Initialize circles on load
 
 // ===== TIMER FUNCTIONS =====
 function formatTime(s) {
@@ -59,18 +66,61 @@ function switchMode(mode) {
   isRunning = false;
   currentMode = mode;
   timeLeft = modes[mode];
-  applyBackground(); updateDisplay();
+  applyBackground(); 
+  updateDisplay();
+  
+  // Update segmented control
+  if (window.segmented) {
+    let segmentIndex;
+    if (mode === 'pomodoro') segmentIndex = 0;
+    else if (mode === 'short-break') segmentIndex = 1;
+    else if (mode === 'long-break') segmentIndex = 2;
+    
+    window.segmented.setActive(segmentIndex);
+  }
 }
 function tick() {
   if (timeLeft>0) {
     timeLeft--; updateDisplay();
   } else finishCycle();
 }
+function updatePomodoroCircles() {
+  const circles = document.querySelectorAll('.pomodoro-circle');
+  circles.forEach((circle, index) => {
+    if (index < completedPomodoros) {
+      circle.classList.add('filled');
+    } else {
+      circle.classList.remove('filled');
+    }
+  });
+}
+function resetPomodoroCircles() {
+  completedPomodoros = 0;
+  localStorage.setItem('completedPomodoros', completedPomodoros);
+  updatePomodoroCircles();
+}
 function finishCycle() {
-  clearInterval(timer); isRunning=false;
-  guardarSesion();
+  clearInterval(timer); 
+  isRunning = false;
+  
+  if (currentMode === 'pomodoro') {
+    saveSession('completed');
+  }
+  
+  // Play applause sound
+  applauseSound.play().catch(error => {
+    console.log('Audio playback failed:', error);
+  });
+  
+  // Update pomodoro circles if a focus session was completed
+  if (currentMode === 'pomodoro') {
+    completedPomodoros = (completedPomodoros + 1) % 5;
+    localStorage.setItem('completedPomodoros', completedPomodoros);
+    updatePomodoroCircles();
+  }
+  
   // auto switch
-  if (currentMode==='pomodoro') switchMode('short-break');
+  if (currentMode === 'pomodoro') switchMode('short-break');
   else switchMode('pomodoro');
 }
 
@@ -140,21 +190,33 @@ function validateAndSetTime(timeStr) {
 }
 
 // ===== CONTROLS =====
-startButton.addEventListener('click', ()=>{
+startButton.addEventListener('click', () => {
   if (!isRunning) {
-    timer = setInterval(tick,1000);
+    if (!activeProjectId && currentMode === 'pomodoro') {
+      alert('Please select an active project before starting the timer');
+      return;
+    }
+    sessionStartTime = new Date().toISOString();
+    timer = setInterval(tick, 1000);
     isRunning = true;
   } else {
     clearInterval(timer);
     isRunning = false;
+    if (currentMode === 'pomodoro') {
+      saveSession('interrupted');
+    }
   }
   updateDisplay();
 });
-resetButton.addEventListener('click', ()=>{
-  clearInterval(timer); isRunning=false;
-  guardarSesion();
+resetButton.addEventListener('click', () => {
+  clearInterval(timer);
+  isRunning = false;
+  if (currentMode === 'pomodoro' && sessionStartTime) {
+    saveSession('interrupted');
+  }
   timeLeft = modes[currentMode];
   updateDisplay();
+  resetPomodoroCircles();
 });
 fullscreenButton.addEventListener('click', ()=>{
   if (!document.fullscreenElement) {
@@ -185,6 +247,23 @@ function guardarSesion() {
   localStorage.setItem('pomodoroSessions', JSON.stringify(sesiones));
 }
 
+function saveSession(status) {
+  if (!activeProjectId) return;
+  
+  const session = {
+    projectId: activeProjectId,
+    mode: currentMode,
+    duration: config[currentMode],
+    startTime: sessionStartTime,
+    endTime: new Date().toISOString(),
+    status: status
+  };
+  
+  const sessions = JSON.parse(localStorage.getItem('pomodoroSessions')) || [];
+  sessions.push(session);
+  localStorage.setItem('pomodoroSessions', JSON.stringify(sessions));
+}
+
 // ===== PROJECTS / CHECKPOINTS / TASKS =====
 function loadData(){
   return JSON.parse(localStorage.getItem('pomodoroData'))||[];
@@ -202,15 +281,33 @@ function renderProjects(){
   // Render active projects
   activeProjects.forEach(proj => {
     const div = document.createElement('div'); 
-    div.className='project';
+    div.className = `project ${proj.id === activeProjectId ? 'active' : ''}`;
     div.setAttribute('data-project-id', proj.id);
     // header
     const hdr = document.createElement('div'); 
-    hdr.className='project-header';
+    hdr.className = 'project-header';
     const titleContainer = document.createElement('div');
     titleContainer.className = 'project-title-container';
+
+    // Set Active button (moved above title)
+    const setActiveBtn = document.createElement('button');
+    setActiveBtn.className = 'set-active-btn';
+    setActiveBtn.textContent = proj.id === activeProjectId ? 'Active' : 'Set Active';
+    setActiveBtn.onclick = () => setActiveProject(proj.id);
+    if (proj.id === activeProjectId) setActiveBtn.style.display = 'none';
+    titleContainer.appendChild(setActiveBtn);
+
+    // Project title
     const title = document.createElement('span'); 
-    title.textContent=`${proj.emoji} ${proj.title}`;
+    title.textContent = `${proj.emoji} ${proj.title}`;
+    if (proj.id === activeProjectId) {
+      const activeBadge = document.createElement('span');
+      activeBadge.className = 'active-badge';
+      activeBadge.textContent = 'Active';
+      title.appendChild(activeBadge);
+    }
+    titleContainer.appendChild(title);
+
     // Progress bar
     const progressContainer = document.createElement('div');
     progressContainer.className = 'progress-container';
@@ -219,19 +316,37 @@ function renderProjects(){
     const progressText = document.createElement('span');
     progressText.className = 'progress-text';
     progressContainer.append(progressBar, progressText);
-    titleContainer.append(title, progressContainer);
+    titleContainer.appendChild(progressContainer);
+
     const headerControls = document.createElement('div');
     headerControls.className = 'header-controls';
+    
     const btnAddCP = document.createElement('button'); 
-    btnAddCP.textContent='+ Add Checkpoint'; 
+    btnAddCP.textContent = '+ Add Checkpoint'; 
     btnAddCP.className = 'btn-add';
-    btnAddCP.onclick=()=> showCheckpointForm(proj.id);
+    btnAddCP.onclick = () => showCheckpointForm(proj.id);
+    
     // Check (complete) button
     const btnComplete = document.createElement('button');
     btnComplete.className = 'complete-btn';
     btnComplete.innerHTML = '<svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="11" cy="11" r="10" stroke="#4a90e2" stroke-width="2" fill="none"/><path d="M7 11.5L10 14.5L15 9.5" stroke="#4a90e2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-    btnComplete.title = 'Mark as Completed';
-    btnComplete.onclick = () => completeProject(proj.id);
+    
+    // Check if all tasks are completed
+    const allTasksCompleted = proj.checkpoints.every(cp => 
+      cp.tasks.length > 0 && cp.tasks.every(task => task.completed)
+    );
+    
+    if (!allTasksCompleted) {
+      btnComplete.style.opacity = '0.3';
+      btnComplete.style.cursor = 'not-allowed';
+      btnComplete.title = 'Complete all tasks first';
+    } else {
+      btnComplete.style.opacity = '1';
+      btnComplete.style.cursor = 'pointer';
+      btnComplete.title = 'Mark as Completed';
+      btnComplete.onclick = () => completeProject(proj.id);
+    }
+    
     // Delete button
     const btnDelete = document.createElement('button');
     btnDelete.className = 'delete-btn';
@@ -548,10 +663,23 @@ function completeProject(projectId) {
   const data = loadData();
   const proj = data.find(p => p.id === projectId);
   if (proj) {
-    proj.completed = true;
-    saveData(data);
-    renderProjects();
+    // Check if all tasks are completed
+    const allTasksCompleted = proj.checkpoints.every(cp => 
+      cp.tasks.length > 0 && cp.tasks.every(task => task.completed)
+    );
+    
+    if (allTasksCompleted) {
+      proj.completed = true;
+      saveData(data);
+      renderProjects();
+    }
   }
+}
+
+function setActiveProject(projectId) {
+  activeProjectId = projectId;
+  localStorage.setItem('activeProjectId', projectId);
+  renderProjects();
 }
 
 // ===== SEGMENTED CONTROL COMPONENT =====
@@ -632,6 +760,36 @@ const segmented = new SegmentedControl({
     else if (value === 'Long Break') switchMode('long-break');
   }
 });
+
+// Make segmented control available globally
+window.segmented = segmented;
 window.currentSegment = segmented.value;
+
+// ===== SETTINGS MENU =====
+const settingsBtn = document.getElementById('settings-btn');
+const settingsMenu = document.getElementById('settings-menu');
+const closeSettings = document.querySelector('.close-settings');
+
+// Create overlay
+const overlay = document.createElement('div');
+overlay.className = 'settings-overlay';
+document.body.appendChild(overlay);
+
+function toggleSettings() {
+  settingsMenu.classList.toggle('active');
+  overlay.classList.toggle('active');
+  document.body.style.overflow = settingsMenu.classList.contains('active') ? 'hidden' : '';
+}
+
+settingsBtn.addEventListener('click', toggleSettings);
+closeSettings.addEventListener('click', toggleSettings);
+overlay.addEventListener('click', toggleSettings);
+
+// Close settings with Escape key
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && settingsMenu.classList.contains('active')) {
+    toggleSettings();
+  }
+});
 
 // ===== INIT =====

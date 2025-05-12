@@ -46,23 +46,73 @@
 
 /* Project and Checkpoint Styles */
 .project {
-  margin: 20px 0;
-  padding: 15px;
+  margin: 30px 0;
+  padding: 30px;
   background: rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  transition: all 0.3s ease;
+}
+
+.project.active {
+  background: rgba(110, 0, 255, 0.1);
+  border: 2px solid #6e00ff;
+  transform: scale(1.02);
+  box-shadow: 0 0 20px rgba(110, 0, 255, 0.2);
+}
+
+.active-badge {
+  background: transparent;
+  color: #6e00ff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin-left: 8px;
+  display: none;
+  font-family: 'Courier New', monospace;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.project.active .active-badge {
+  display: inline-block;
+}
+
+.set-active-btn {
+  background: none;
+  border: 1px solid #6e00ff;
+  color: #6e00ff;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  margin-right: 8px;
+}
+
+.set-active-btn:hover {
+  background: rgba(110, 0, 255, 0.1);
+}
+
+.project.active .set-active-btn {
+  display: none;
 }
 
 .project-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 15px;
+  margin-bottom: 25px;
 }
 
 .project-title-container {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
   flex: 1;
 }
 
@@ -103,7 +153,7 @@
 
 .header-controls {
   display: flex;
-  gap: 10px;
+  gap: 15px;
   align-items: center;
 }
 
@@ -123,17 +173,17 @@
 }
 
 .checkpoint {
-  margin: 10px 0;
-  padding: 10px;
+  margin: 20px 0;
+  padding: 20px;
   background: rgba(255, 255, 255, 0.03);
-  border-radius: 6px;
+  border-radius: 8px;
 }
 
 .checkpoint-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
 }
 
 .tasks-list {
@@ -142,18 +192,18 @@
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 }
 
 .task-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  padding: 8px 12px;
-  min-height: 32px;
+  gap: 12px;
+  padding: 12px 16px;
+  min-height: 40px;
   background: rgba(255,255,255,0.04);
-  border-radius: 6px;
+  border-radius: 8px;
   box-sizing: border-box;
 }
 
@@ -161,11 +211,12 @@
   flex: 1;
   transition: all 0.2s ease;
   order: 1;
+  font-size: 1.1rem;
 }
 
 .task-item input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   margin: 0;
   border: 1.5px solid rgba(255, 255, 255, 0.3);
   border-radius: 4px;
@@ -201,6 +252,7 @@
 .task-item input[type="checkbox"]:checked + span {
   text-decoration: line-through;
   color: rgba(255, 255, 255, 0.5);
+  transition: all 0.2s ease;
 }
 
 /* General Layout */
@@ -215,19 +267,20 @@ body {
 }
 
 #projects-container {
-  max-width: 800px;
+  max-width: 1200px;
   margin: 0 auto;
+  padding: 0 20px;
 }
 
 /* Typography */
 .project-header span {
-  font-size: 1.25rem;
+  font-size: 1.4rem;
   font-weight: 600;
   letter-spacing: -0.01em;
 }
 
 .checkpoint-header span {
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   font-weight: 500;
   letter-spacing: -0.01em;
 }
@@ -241,11 +294,11 @@ body {
 /* Timer Display */
 #timer {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 3.5rem;
+  font-size: 7rem;
   font-weight: 300;
   letter-spacing: -0.02em;
   display: inline-block;
-  min-width: 200px;
+  min-width: 400px;
   text-align: center;
   transition: font-size 0.3s ease;
 }
@@ -371,9 +424,9 @@ body {
   border: none;
   color: #4a90e2;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 0.9375rem;
+  font-size: 1rem;
   font-weight: 500;
-  padding: 6px 12px;
+  padding: 8px 16px;
   border-radius: 6px;
   cursor: pointer;
   transition: background-color 0.2s ease;
@@ -471,8 +524,8 @@ body {
   background: none;
   border: none;
   cursor: pointer;
-  padding: 5px;
-  border-radius: 4px;
+  padding: 8px;
+  border-radius: 6px;
   transition: background-color 0.3s;
   display: flex;
   align-items: center;
@@ -480,6 +533,11 @@ body {
 
 .complete-btn:hover {
   background-color: rgba(74, 144, 226, 0.1);
+}
+
+.complete-btn svg {
+  width: 26px;
+  height: 26px;
 }
 
 .completed-projects-list {
@@ -529,4 +587,125 @@ body {
   background: transparent;
   color: #fff;
   border-color: #6e00ff;
+}
+
+.pomodoro-circle {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #6e00ff;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.pomodoro-circle.filled {
+  background-color: #6e00ff;
+  box-shadow: 0 0 10px rgba(110, 0, 255, 0.5);
+}
+
+.settings-btn {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: rgba(110, 0, 255, 0.1);
+  border: 2px solid #6e00ff;
+  color: #6e00ff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  z-index: 1000;
+}
+
+.settings-btn:hover {
+  background: rgba(110, 0, 255, 0.2);
+  transform: scale(1.1);
+}
+
+.settings-menu {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.9);
+  background: rgba(26, 26, 26, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 24px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
+  z-index: 1001;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(110, 0, 255, 0.2);
+}
+
+.settings-menu.active {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(110, 0, 255, 0.2);
+}
+
+.settings-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #fff;
+}
+
+.close-settings {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.close-settings:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.settings-content {
+  color: #fff;
+}
+
+/* Overlay for settings menu */
+.settings-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(5px);
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.settings-overlay.active {
+  opacity: 1;
+  visibility: visible;
 } 
