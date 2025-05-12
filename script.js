@@ -82,17 +82,41 @@ function switchMode(mode) {
 function tick() {
   if (timeLeft>0) {
     timeLeft--; updateDisplay();
+    logFocusSecond();
   } else finishCycle();
 }
-function updatePomodoroCircles() {
+function updatePomodoroCircles(lastFilledIndex = null) {
   const circles = document.querySelectorAll('.pomodoro-circle');
   circles.forEach((circle, index) => {
     if (index < completedPomodoros) {
-      circle.classList.add('filled');
+      if (!circle.classList.contains('filled')) {
+        circle.classList.add('filled');
+        // If this is the last filled circle, trigger sparkles
+        if (lastFilledIndex !== null && index === lastFilledIndex) {
+          triggerSparkles(circle);
+        }
+      }
     } else {
       circle.classList.remove('filled');
     }
   });
+}
+function triggerSparkles(circle) {
+  // Create several sparkles
+  for (let i = 0; i < 12; i++) {
+    const sparkle = document.createElement('div');
+    sparkle.className = 'sparkle';
+    // Random direction and distance
+    const angle = (Math.PI * 2 * i) / 12;
+    const distance = 24 + Math.random() * 10;
+    sparkle.style.setProperty('--dx', `${Math.cos(angle) * distance}px`);
+    sparkle.style.setProperty('--dy', `${Math.sin(angle) * distance}px`);
+    circle.appendChild(sparkle);
+    // Remove sparkle after animation
+    setTimeout(() => {
+      sparkle.remove();
+    }, 700);
+  }
 }
 function resetPomodoroCircles() {
   completedPomodoros = 0;
@@ -114,8 +138,12 @@ function finishCycle() {
   
   // Update pomodoro circles if a focus session was completed
   if (currentMode === 'pomodoro') {
+    const prevCompleted = completedPomodoros;
     completedPomodoros = (completedPomodoros + 1) % 5;
     localStorage.setItem('completedPomodoros', completedPomodoros);
+    // Pass the just-filled circle index for animation
+    updatePomodoroCircles(prevCompleted);
+  } else {
     updatePomodoroCircles();
   }
   
@@ -231,11 +259,14 @@ modeButtons.forEach(btn=> btn.addEventListener('click',()=> switchMode(btn.datas
 function toggleFocusMode() {
   isFocusMode = !isFocusMode;
   document.body.classList.toggle('focus-mode', isFocusMode);
-  
+  // Hide segmented control in focus mode
+  const segContainer = document.getElementById('segmented-control-container');
+  if (segContainer) {
+    segContainer.style.display = isFocusMode ? 'none' : '';
+  }
   // Update fullscreen button icon
   fullscreenButton.innerHTML = isFocusMode ? '⤢' : '⤡';
   fullscreenButton.title = isFocusMode ? 'Exit Focus Mode' : 'Enter Focus Mode';
-  
   // Update button text
   startButton.textContent = isRunning ? 'Pause' : 'Start';
 }
@@ -745,6 +776,7 @@ class SegmentedControl {
 
 // ===== INSERT SEGMENTED CONTROL ABOVE CLOCK =====
 const segControlDiv = document.createElement('div');
+segControlDiv.id = 'segmented-control-container';
 timerContainer.parentNode.insertBefore(segControlDiv, timerContainer);
 
 const segmented = new SegmentedControl({
@@ -778,6 +810,19 @@ document.body.appendChild(overlay);
 function showFocusTimerSettings() {
   const content = settingsMenu.querySelector('.settings-content');
   content.innerHTML = '';
+
+  // Back button
+  const backBtn = document.createElement('button');
+  backBtn.innerHTML = '← Back';
+  backBtn.style.background = 'none';
+  backBtn.style.border = 'none';
+  backBtn.style.color = '#6e00ff';
+  backBtn.style.fontSize = '1rem';
+  backBtn.style.padding = '8px 0';
+  backBtn.style.cursor = 'pointer';
+  backBtn.style.marginBottom = '16px';
+  backBtn.onclick = populateSettingsMenu;
+  content.appendChild(backBtn);
 
   // Title
   const title = document.createElement('h2');
@@ -927,7 +972,377 @@ function showFocusTimerSettings() {
   };
 }
 
-// Update settings menu to show focus timer settings on click
+function showStatsSection() {
+  const content = settingsMenu.querySelector('.settings-content');
+  content.innerHTML = '';
+
+  // Back button
+  const backBtn = document.createElement('button');
+  backBtn.innerHTML = '← Back';
+  backBtn.style.background = 'none';
+  backBtn.style.border = 'none';
+  backBtn.style.color = '#6e00ff';
+  backBtn.style.fontSize = '1rem';
+  backBtn.style.padding = '8px 0';
+  backBtn.style.cursor = 'pointer';
+  backBtn.style.marginBottom = '16px';
+  backBtn.onclick = populateSettingsMenu;
+  content.appendChild(backBtn);
+
+  // Header (no PLUS label)
+  const title = document.createElement('h2');
+  title.textContent = 'Focus Stats';
+  title.style.marginBottom = '8px';
+  content.appendChild(title);
+
+  // Period buttons
+  const periods = [
+    { label: 'Today', value: 'today' },
+    { label: '7 Days', value: '7d' },
+    { label: '28 Days', value: '28d' }
+  ];
+  let selectedPeriod = 'today';
+  const btnRow = document.createElement('div');
+  btnRow.style.display = 'flex';
+  btnRow.style.gap = '12px';
+  btnRow.style.marginBottom = '18px';
+  const periodBtns = {};
+  periods.forEach(p => {
+    const btn = document.createElement('button');
+    btn.textContent = p.label;
+    btn.style.padding = '8px 18px';
+    btn.style.fontSize = '1rem';
+    btn.style.borderRadius = '8px';
+    btn.style.border = 'none';
+    btn.style.cursor = 'pointer';
+    btn.style.fontWeight = '600';
+    btn.style.background = p.value === selectedPeriod ? '#a259ff' : '#18191c';
+    btn.style.color = p.value === selectedPeriod ? '#fff' : '#ccc';
+    btn.onclick = () => {
+      selectedPeriod = p.value;
+      updateStats();
+      Object.keys(periodBtns).forEach(k => {
+        periodBtns[k].style.background = k === selectedPeriod ? '#a259ff' : '#18191c';
+        periodBtns[k].style.color = k === selectedPeriod ? '#fff' : '#ccc';
+      });
+    };
+    periodBtns[p.value] = btn;
+    btnRow.appendChild(btn);
+  });
+  content.appendChild(btnRow);
+
+  // Stats row (only Focus, Tasks, Projects Completed)
+  const statsRow = document.createElement('div');
+  statsRow.style.display = 'flex';
+  statsRow.style.gap = '64px'; // More spacing
+  statsRow.style.marginBottom = '18px';
+  statsRow.style.alignItems = 'flex-end';
+  statsRow.style.justifyContent = 'center';
+  content.appendChild(statsRow);
+
+  // Stat blocks
+  const statBlocks = {
+    focus: { icon: '⚡', label: 'FOCUS', value: '0m 0s' },
+    tasks: { icon: '✅', label: 'TASKS', value: '0' },
+    projects: { icon: '📁', label: 'PROJECTS', value: '0' }
+  };
+  const statEls = {};
+  Object.keys(statBlocks).forEach(k => {
+    const block = document.createElement('div');
+    block.style.display = 'flex';
+    block.style.flexDirection = 'column';
+    block.style.alignItems = 'center';
+    block.style.minWidth = '90px';
+    block.style.fontWeight = 'bold';
+    block.style.fontSize = '1.1rem';
+    const label = document.createElement('span');
+    label.textContent = `${statBlocks[k].icon} ${statBlocks[k].label}`;
+    label.style.fontWeight = '700';
+    label.style.fontSize = '1.05rem';
+    label.style.color = '#ccc';
+    label.style.marginBottom = '2px';
+    block.appendChild(label);
+    const value = document.createElement('span');
+    value.textContent = statBlocks[k].value;
+    value.style.fontWeight = '700';
+    value.style.fontSize = '2.2rem';
+    value.style.marginTop = '2px';
+    value.style.color = '#fff';
+    statEls[k] = value;
+    block.appendChild(value);
+    statsRow.appendChild(block);
+  });
+
+  // Recent Productivity Title
+  const recentTitle = document.createElement('div');
+  recentTitle.textContent = 'Recent Productivity';
+  recentTitle.style.fontWeight = '700';
+  recentTitle.style.fontSize = '1.3rem';
+  recentTitle.style.color = '#888';
+  recentTitle.style.margin = '24px 0 8px 0';
+  content.appendChild(recentTitle);
+
+  // Chart container
+  const chartDiv = document.createElement('div');
+  chartDiv.id = 'stats-chart';
+  chartDiv.style.width = '100%';
+  chartDiv.style.height = '180px';
+  chartDiv.style.background = '#18191c';
+  chartDiv.style.borderRadius = '12px';
+  chartDiv.style.marginBottom = '18px';
+  content.appendChild(chartDiv);
+
+  // Project breakdown section
+  const projectBreakdownTitle = document.createElement('div');
+  projectBreakdownTitle.textContent = 'Project Breakdown';
+  projectBreakdownTitle.style.fontWeight = '700';
+  projectBreakdownTitle.style.fontSize = '1.3rem';
+  projectBreakdownTitle.style.color = '#888';
+  projectBreakdownTitle.style.margin = '24px 0 8px 0';
+  content.appendChild(projectBreakdownTitle);
+
+  const projectBreakdownDiv = document.createElement('div');
+  projectBreakdownDiv.id = 'project-breakdown';
+  projectBreakdownDiv.style.marginBottom = '18px';
+  content.appendChild(projectBreakdownDiv);
+
+  // Stats calculation
+  function updateStats() {
+    // Get focusLog
+    const focusLog = JSON.parse(localStorage.getItem('focusLog')) || [];
+    const now = new Date();
+    let start;
+    if (selectedPeriod === 'today') {
+      start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    } else if (selectedPeriod === '7d') {
+      start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6);
+    } else {
+      start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 27);
+    }
+
+    // Filter log by period
+    const filtered = focusLog.filter(e => new Date(e.timestamp) >= start);
+    
+    // Calculate total focus time
+    const focusSeconds = filtered.length;
+    const focusMins = Math.floor(focusSeconds / 60);
+    const focusSecs = focusSeconds % 60;
+    statEls.focus.textContent = `${focusMins}m ${focusSecs}s`;
+
+    // Calculate completed tasks
+    const data = loadData();
+    const completedTasks = data.reduce((sum, proj) => 
+      sum + proj.checkpoints.reduce((sum, cp) => 
+        sum + cp.tasks.filter(t => t.completed).length, 0), 0);
+    statEls.tasks.textContent = completedTasks;
+
+    // Calculate completed projects
+    const completedProjects = data.filter(p => p.completed).length;
+    statEls.projects.textContent = completedProjects;
+
+    // Update project breakdown
+    const projectStats = {};
+    filtered.forEach(entry => {
+      let name = entry.projectName;
+      if (!name || name === 'Unknown Project' || name === undefined) {
+        name = 'No project selected';
+      }
+      if (!projectStats[name]) {
+        projectStats[name] = 0;
+      }
+      projectStats[name]++;
+    });
+
+    // Sort projects by time spent
+    const sortedProjects = Object.entries(projectStats)
+      .sort(([,a], [,b]) => b - a);
+
+    // Update project breakdown display
+    projectBreakdownDiv.innerHTML = '';
+    sortedProjects.forEach(([name, seconds]) => {
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      const projectDiv = document.createElement('div');
+      projectDiv.style.display = 'flex';
+      projectDiv.style.justifyContent = 'space-between';
+      projectDiv.style.alignItems = 'center';
+      projectDiv.style.padding = '12px';
+      projectDiv.style.background = '#18191c';
+      projectDiv.style.borderRadius = '8px';
+      projectDiv.style.marginBottom = '8px';
+      
+      const nameSpan = document.createElement('span');
+      nameSpan.textContent = name;
+      nameSpan.style.fontWeight = '500';
+      
+      const timeSpan = document.createElement('span');
+      timeSpan.textContent = `${mins}m ${secs}s`;
+      timeSpan.style.color = '#6e00ff';
+      
+      projectDiv.appendChild(nameSpan);
+      projectDiv.appendChild(timeSpan);
+      projectBreakdownDiv.appendChild(projectDiv);
+    });
+
+    // Update chart
+    updateChart(filtered);
+  }
+
+  function updateChart(data) {
+    const ctx = document.createElement('canvas');
+    chartDiv.innerHTML = '';
+    chartDiv.appendChild(ctx);
+
+    // Group data by day
+    const dailyData = {};
+    data.forEach(entry => {
+      const date = new Date(entry.timestamp).toLocaleDateString();
+      if (!dailyData[date]) {
+        dailyData[date] = 0;
+      }
+      dailyData[date]++;
+    });
+
+    // Convert to minutes
+    Object.keys(dailyData).forEach(date => {
+      dailyData[date] = Math.floor(dailyData[date] / 60);
+    });
+
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: Object.keys(dailyData),
+        datasets: [{
+          label: 'Focus Time (minutes)',
+          data: Object.values(dailyData),
+          backgroundColor: '#6e00ff',
+          borderRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: {
+              color: 'rgba(255, 255, 255, 0.1)'
+            },
+            ticks: {
+              color: '#888'
+            }
+          },
+          x: {
+            grid: {
+              color: 'rgba(255, 255, 255, 0.1)'
+            },
+            ticks: {
+              color: '#888'
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // Initial update
+  updateStats();
+}
+
+function showProfileSection() {
+  const content = settingsMenu.querySelector('.settings-content');
+  content.innerHTML = '';
+
+  // Back button
+  const backBtn = document.createElement('button');
+  backBtn.innerHTML = '← Back';
+  backBtn.style.background = 'none';
+  backBtn.style.border = 'none';
+  backBtn.style.color = '#6e00ff';
+  backBtn.style.fontSize = '1rem';
+  backBtn.style.padding = '8px 0';
+  backBtn.style.cursor = 'pointer';
+  backBtn.style.marginBottom = '16px';
+  backBtn.onclick = populateSettingsMenu;
+  content.appendChild(backBtn);
+
+  // Title
+  const title = document.createElement('h2');
+  title.textContent = 'Profile';
+  content.appendChild(title);
+
+  // Profile content
+  const profileContent = document.createElement('div');
+  profileContent.style.marginTop = '20px';
+
+  // Total Focus Time
+  const totalFocusTime = document.createElement('div');
+  totalFocusTime.style.marginBottom = '20px';
+  const focusLog = JSON.parse(localStorage.getItem('focusLog')) || [];
+  const totalSeconds = focusLog.length;
+  const totalHours = Math.floor(totalSeconds / 3600);
+  const totalMinutes = Math.floor((totalSeconds % 3600) / 60);
+  totalFocusTime.innerHTML = `
+    <div style="font-size: 1.2rem; color: #888; margin-bottom: 8px;">Total Focus Time</div>
+    <div style="font-size: 2rem; font-weight: bold;">${totalHours}h ${totalMinutes}m</div>
+  `;
+  profileContent.appendChild(totalFocusTime);
+
+  // Completed Projects
+  const completedProjects = document.createElement('div');
+  const data = loadData();
+  const completedCount = data.filter(p => p.completed).length;
+  completedProjects.innerHTML = `
+    <div style="font-size: 1.2rem; color: #888; margin-bottom: 8px;">Completed Projects</div>
+    <div style="font-size: 2rem; font-weight: bold;">${completedCount}</div>
+  `;
+  profileContent.appendChild(completedProjects);
+
+  content.appendChild(profileContent);
+}
+
+function showFeedbackSection() {
+  const content = settingsMenu.querySelector('.settings-content');
+  content.innerHTML = '';
+
+  // Back button
+  const backBtn = document.createElement('button');
+  backBtn.innerHTML = '← Back';
+  backBtn.style.background = 'none';
+  backBtn.style.border = 'none';
+  backBtn.style.color = '#6e00ff';
+  backBtn.style.fontSize = '1rem';
+  backBtn.style.padding = '8px 0';
+  backBtn.style.cursor = 'pointer';
+  backBtn.style.marginBottom = '16px';
+  backBtn.onclick = populateSettingsMenu;
+  content.appendChild(backBtn);
+
+  // Title
+  const title = document.createElement('h2');
+  title.textContent = 'Feedback';
+  content.appendChild(title);
+
+  // Feedback content
+  const feedbackContent = document.createElement('div');
+  feedbackContent.style.marginTop = '20px';
+  feedbackContent.innerHTML = `
+    <div style="font-size: 1.1rem; color: #888; margin-bottom: 16px;">
+      Have suggestions or found a bug? Contact us at:
+    </div>
+    <div style="font-size: 1.2rem; color: #6e00ff; font-weight: 500;">
+      minimalistpomodoroapp@gmail.com
+    </div>
+  `;
+  content.appendChild(feedbackContent);
+}
+
+// Update populateSettingsMenu to include new sections
 function populateSettingsMenu() {
   const content = settingsMenu.querySelector('.settings-content');
   content.innerHTML = '';
@@ -935,9 +1350,9 @@ function populateSettingsMenu() {
   const options = [
     { icon: '⏰', label: 'Clock' },
     { icon: '⏱️', label: 'Focus Timer', onClick: showFocusTimerSettings },
-    { icon: '📊', label: 'Stats' },
-    { icon: '👤', label: 'Profile' },
-    { icon: '💬', label: 'Feedback' }
+    { icon: '📊', label: 'Stats', onClick: showStatsSection },
+    { icon: '👤', label: 'Profile', onClick: showProfileSection },
+    { icon: '💬', label: 'Feedback', onClick: showFeedbackSection }
   ];
   options.forEach(opt => {
     const btn = document.createElement('button');
@@ -982,5 +1397,29 @@ document.addEventListener('keydown', (e) => {
     toggleSettings();
   }
 });
+
+// ===== FOCUS TIME TRACKING =====
+function logFocusSecond() {
+  if (currentMode !== 'pomodoro' || !isRunning || !activeProjectId) return;
+  
+  const now = new Date();
+  const entry = {
+    timestamp: now.toISOString(),
+    projectId: activeProjectId,
+    mode: currentMode,
+    projectName: getProjectName(activeProjectId)
+  };
+  
+  let focusLog = JSON.parse(localStorage.getItem('focusLog')) || [];
+  focusLog.push(entry);
+  localStorage.setItem('focusLog', JSON.stringify(focusLog));
+}
+
+// Helper function to get project name
+function getProjectName(projectId) {
+  const data = loadData();
+  const project = data.find(p => p.id === projectId);
+  return project ? project.title : 'Unknown Project';
+}
 
 // ===== INIT =====

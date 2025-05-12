@@ -624,6 +624,7 @@ h3, .project-title, .checkpoint-title {
   border: 2px solid #6e00ff;
   border-radius: 50%;
   transition: all 0.3s ease;
+  position: relative;
 }
 
 .pomodoro-circle.filled {
@@ -737,4 +738,25 @@ h3, .project-title, .checkpoint-title {
 .settings-overlay.active {
   opacity: 1;
   visibility: visible;
+}
+
+/* Sparkles animation for pomodoro circles */
+.pomodoro-circle {
+  position: relative;
+}
+.sparkle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #fffbe6;
+  pointer-events: none;
+  opacity: 0.85;
+  z-index: 2;
+  animation: sparkle-anim 0.7s linear forwards;
+}
+@keyframes sparkle-anim {
+  0% { opacity: 1; transform: scale(1) translate(0,0); }
+  80% { opacity: 1; }
+  100% { opacity: 0; transform: scale(0.7) translate(var(--dx, 0px), var(--dy, 0px)); }
 } 
