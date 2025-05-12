@@ -1276,6 +1276,11 @@ function showProfileSection() {
   title.textContent = 'Profile';
   content.appendChild(title);
 
+  // Google Auth UI
+  const authDiv = document.createElement('div');
+  content.appendChild(authDiv);
+  renderGoogleAuthUI(authDiv);
+
   // Profile content
   const profileContent = document.createElement('div');
   profileContent.style.marginTop = '20px';
@@ -1421,5 +1426,76 @@ function getProjectName(projectId) {
   const project = data.find(p => p.id === projectId);
   return project ? project.title : 'Unknown Project';
 }
+
+// ===== GOOGLE SIGN-IN LOGIC =====
+let currentUser = null;
+
+function renderGoogleAuthUI(container) {
+  container.innerHTML = '';
+  if (currentUser) {
+    // Show user info and sign out button
+    const userDiv = document.createElement('div');
+    userDiv.style.display = 'flex';
+    userDiv.style.alignItems = 'center';
+    userDiv.style.gap = '12px';
+    userDiv.style.marginBottom = '18px';
+    if (currentUser.photoURL) {
+      const img = document.createElement('img');
+      img.src = currentUser.photoURL;
+      img.alt = 'User photo';
+      img.style.width = '40px';
+      img.style.height = '40px';
+      img.style.borderRadius = '50%';
+      userDiv.appendChild(img);
+    }
+    const nameSpan = document.createElement('span');
+    nameSpan.textContent = currentUser.displayName || currentUser.email;
+    nameSpan.style.fontWeight = '600';
+    nameSpan.style.fontSize = '1.1rem';
+    userDiv.appendChild(nameSpan);
+    const signOutBtn = document.createElement('button');
+    signOutBtn.textContent = 'Sign out';
+    signOutBtn.style.background = '#6e00ff';
+    signOutBtn.style.color = '#fff';
+    signOutBtn.style.border = 'none';
+    signOutBtn.style.borderRadius = '8px';
+    signOutBtn.style.padding = '8px 18px';
+    signOutBtn.style.fontWeight = '600';
+    signOutBtn.style.cursor = 'pointer';
+    signOutBtn.onclick = () => {
+      firebase.auth().signOut();
+    };
+    userDiv.appendChild(signOutBtn);
+    container.appendChild(userDiv);
+  } else {
+    // Show sign in button
+    const signInBtn = document.createElement('button');
+    signInBtn.textContent = 'Sign in with Google';
+    signInBtn.style.background = '#fff';
+    signInBtn.style.color = '#6e00ff';
+    signInBtn.style.border = 'none';
+    signInBtn.style.borderRadius = '8px';
+    signInBtn.style.padding = '10px 24px';
+    signInBtn.style.fontWeight = '700';
+    signInBtn.style.fontSize = '1.1rem';
+    signInBtn.style.cursor = 'pointer';
+    signInBtn.style.marginBottom = '18px';
+    signInBtn.onclick = () => {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      firebase.auth().signInWithPopup(provider);
+    };
+    container.appendChild(signInBtn);
+  }
+}
+
+// Listen for auth state changes
+firebase.auth().onAuthStateChanged(user => {
+  currentUser = user;
+  // If profile section is open, re-render it
+  const content = settingsMenu.querySelector('.settings-content');
+  if (content && content.closest('.settings-menu') && content.querySelector('h2') && content.querySelector('h2').textContent === 'Profile') {
+    showProfileSection();
+  }
+});
 
 // ===== INIT =====
